@@ -1,0 +1,204 @@
+<title>Manchester With Jason</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sticky now-bar on top, day tabs, one vertical timeline per day, reference sections below. Status is carried by labels, borders and fill patterns, never by red/green. */
+:root{--bg:#f4f6f9;--card:#ffffff;--ink:#14213a;--mute:#5a6780;--line:#d7dde8;--accent:#1f5fd1;--accent-ink:#ffffff;--warm:#c75b00;--past:#e9ecf2;--past-ink:#7d889c;--font-d:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--font-b:"Schibsted Grotesk","Segoe UI",system-ui,sans-serif;--font-m:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1524;--card:#17213a;--ink:#e8edf7;--mute:#9aa7c0;--line:#2b3957;--accent:#6aa2ff;--accent-ink:#0e1524;--warm:#ffa24d;--past:#131b2e;--past-ink:#6b7894;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1524;--card:#17213a;--ink:#e8edf7;--mute:#9aa7c0;--line:#2b3957;--accent:#6aa2ff;--accent-ink:#0e1524;--warm:#ffa24d;--past:#131b2e;--past-ink:#6b7894;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--font-b);padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+.wrap{max-width:640px;margin:0 auto}
+header{padding-block:18px 8px}
+h1{font:700 28px/1.1 var(--font-d);margin:0;text-wrap:balance}
+.sub{color:var(--mute);margin:4px 0 0;font-size:14px}
+a{color:var(--accent)}
+#bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:center;margin-block:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+#clock{font:700 30px/1 var(--font-m);grid-row:span 2;font-variant-numeric:tabular-nums}
+#now1{font-weight:600;min-width:0}
+#now2{font-size:13px;opacity:.85;min-width:0}
+#prog{grid-column:1/-1;height:6px;border-radius:3px;background:rgba(127,127,127,.35);overflow:hidden;margin-top:6px}
+#prog i{display:block;height:100%;width:0;background:var(--bg);border-radius:3px}
+#test{font-size:12px;color:var(--mute);display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:2px 0 10px}
+#test select,#test input,#test button{font:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-block:6px 12px}
+.tab{font:600 14px var(--font-b);padding:10px 4px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tab small{display:block;font-weight:400;font-size:11px;opacity:.85}
+.maps{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;margin-bottom:14px}
+.maps b{font-weight:600}
+.maps a{border:1.5px solid var(--accent);border-radius:999px;padding:4px 12px;text-decoration:none;font-weight:600}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.st{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:4px;min-width:0}
+.top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tm{font:700 14px var(--font-m);font-variant-numeric:tabular-nums;color:var(--accent)}
+.nm{font:700 17px/1.2 var(--font-d);min-width:0;overflow-wrap:anywhere}
+.stay{font:500 12px var(--font-m);border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--mute)}
+.x{margin:0;color:var(--ink);font-size:15px}
+.w{margin:0;font-size:13px;color:var(--mute)}
+.pins{margin:2px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.pins li{font-size:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}
+.pins a,.mp{font-size:13px;font-weight:600}
+.badge{display:none;font:700 11px var(--font-m);letter-spacing:.08em;padding:2px 8px;border-radius:5px}
+.st.past{background:var(--past);border-color:transparent;color:var(--past-ink)}
+.st.past .nm,.st.past .x,.st.past .tm,.st.past .w{color:var(--past-ink)}
+.st.past .nm{text-decoration:line-through;text-decoration-thickness:1px}
+.st.past .badge{display:inline-block;background:transparent;border:1px solid var(--past-ink);color:var(--past-ink)}
+.st.now{border:3px solid var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+.st.now .badge{display:inline-block;background:var(--accent);color:var(--accent-ink)}
+.st.next{border-style:dashed;border-color:var(--accent)}
+.st.next .badge{display:inline-block;border:1.5px solid var(--accent);color:var(--accent)}
+.gap{display:flex;align-items:center;gap:8px;font:600 12px var(--font-m);color:var(--accent);padding:0 4px}
+.gap::before,.gap::after{content:"";flex:1;border-top:3px double var(--accent)}
+h2{font:700 21px var(--font-d);margin:30px 0 8px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px}
+.card p,.card li{margin:0;font-size:15px}
+.card ul{margin:0;padding-left:20px;display:grid;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{font:500 13px var(--font-m);text-align:right;white-space:nowrap}
+.scroll{overflow-x:auto}
+.todo label{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.todo input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--accent)}
+.todo input:checked+span{text-decoration:line-through;color:var(--mute)}
+.legend{font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 12px}
+footer{margin-top:28px;font-size:12px;color:var(--mute)}
+</style>
+<div class="wrap">
+<header><h1>Manchester with Jason</h1><p class="sub">Sun 25 – Tue 27 Oct 2026 · YOTEL Manchester Deansgate, 2 John Dalton St, M3 2NW · all times GMT (clocks go back Sun 02:00)</p></header>
+<div id="bar" role="status" aria-live="polite"><div id="clock">--:--</div><div id="now1">Loading</div><div id="now2"></div><div id="prog"><i></i></div></div>
+<div id="test"><span id="mode"></span><label>Test a time <select id="tday"><option value="sun">Sun</option><option value="mon">Mon</option><option value="tue">Tue</option></select></label><input id="ttime" type="time" step="300" value="12:30"><button id="tgo" type="button">Apply</button><button id="tlive" type="button">Use live time</button></div>
+<div class="tabs" role="tablist" id="tabs"></div>
+<div class="maps" id="maps"></div>
+<ol class="tl" id="tl"></ol>
+
+<h2>🚆 Transport</h2>
+<div class="card"><ul>
+<li><b>Sun 12:30</b> CrossCountry from Birmingham arrives Piccadilly. Jason arrives at Oxford Road 13:20.</li>
+<li><b>Mon evening, Co-op Live.</b> Leave Butter Bird by 18:05. Tram towards Etihad Campus (Bee Network app is set up) or a taxi to Edwin Road, M11 3ER. Tram works run 19 Oct to 1 Nov, so check the live status around 17:45 and take a taxi if the line is down.</li>
+<li><b>Mon 09:55</b> taxi from Salford Lads Club to the Northern Quarter, about 15 min.</li>
+<li><b>Tue 14:25</b> trains home. Piccadilly 14:25, Birmingham New St 15:57, change 16:16, Wylde Green 16:34. Jason also takes the 14:25 from Oxford Road.</li>
+<li>No bags to the gig. Backpacks stay in the room Sunday and Monday and travel with you on Tuesday.</li>
+</ul></div>
+
+<h2>⏱ Time at each pub, cafe and restaurant</h2>
+<div class="card scroll"><table>
+<tr><th>Sunday</th><th class="n">Min</th></tr>
+<tr><td>🍻 Lass O'Gowrie</td><td class="n">65</td></tr>
+<tr><td>🍴 House of Social / Mughli</td><td class="n">60</td></tr>
+<tr><td>🍻 Britons Protection</td><td class="n">30</td></tr>
+<tr><td>🍻 The Temple</td><td class="n">30</td></tr>
+<tr><td>🍻 Peveril of the Peak</td><td class="n">30</td></tr>
+<tr><td>🍻 Mulligans</td><td class="n">30</td></tr>
+<tr><td>🍻 BOX, El Clásico</td><td class="n">135</td></tr>
+<tr><td>🍻 Schofield's (optional)</td><td class="n">open</td></tr>
+<tr><th>Monday</th><th class="n">Min</th></tr>
+<tr><td>☕ Fort Coffee</td><td class="n">15</td></tr>
+<tr><td>🍴 This &amp; That</td><td class="n">40</td></tr>
+<tr><td>🍻 Marble Arch Inn</td><td class="n">30</td></tr>
+<tr><td>🍻 Castle Hotel</td><td class="n">35</td></tr>
+<tr><td>🍴 Butter Bird</td><td class="n">50</td></tr>
+<tr><th>Tuesday</th><th class="n">Min</th></tr>
+<tr><td>☕ Federal Oxford Rd</td><td class="n">40</td></tr>
+<tr><td>🍴 Bundobust</td><td class="n">70</td></tr>
+</table><p class="w">Pub minutes: Sunday 185 before BOX, Monday 65.</p></div>
+
+<h2>To do</h2>
+<div class="card todo" id="todo"></div>
+
+<h2>Still unconfirmed</h2>
+<div class="card"><ul>
+<li>All walking times are my estimates. Test the day-map links and trust Google over me.</li>
+<li>This &amp; That kitchen start (we'll wing it).</li>
+<li>YOTEL bag holding (we'll wing it).</li>
+<li>BOX table-hold policy and Mulligans live music (we'll be fine).</li>
+<li>Exact Tony Wilson Place photo spot.</li>
+<li>Order of pins inside the Piccadilly block and the Britons, Temple, Peveril order along Great Bridgewater St.</li>
+</ul></div>
+
+<h2>Subs bench</h2>
+<div class="card"><p>Reserves if plans change. Nothing here is scheduled.</p><ul><li>📸 Afflecks Factory mosaic (far off the route) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Afflecks%2C+Manchester">Map</a></li><li>🍻 Grey Horse Inn <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Grey+Horse+Inn%2C+Manchester">Map</a></li><li>🍻 The Angel (optional drink after Marble Arch) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=The+Angel%2C+Angel+St%2C+Manchester">Map</a></li><li>🍴 Mackie Mayor <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Mackie+Mayor%2C+Smithfield%2C+Manchester">Map</a></li><li>🍴 Society <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Society%2C+Manchester">Map</a></li><li>🍴 Marhaba Take Away <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Marhaba+Take+Away%2C+Manchester">Map</a></li><li>🍴 Kabana <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Kabana%2C+Manchester">Map</a></li><li>📸 86 Palatine Road, first Factory Records HQ <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=86+Palatine+Road%2C+Didsbury">Map</a></li><li>🍻 Arcane (cocktail backup) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Arcane%2C+Manchester">Map</a></li><li>🍻 City Arms <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=City+Arms%2C+Kennedy+St%2C+Manchester">Map</a></li><li>🍻 Circus Tavern <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Circus+Tavern%2C+Portland+St%2C+Manchester">Map</a></li><li>🍻 Hare &amp; Hounds <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Hare+and+Hounds%2C+Shudehill%2C+Manchester">Map</a></li><li>🍻 Smithfield Market Tavern (awkward hours) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Smithfield+Market+Tavern%2C+Manchester">Map</a></li><li>🍻 The Salisbury (football-area backup) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=The+Salisbury%2C+Manchester">Map</a></li><li>🍴 Cardinal Rule, Northern Monk Refectory (alternative to Mughli, not an addition) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Cardinal+Rule%2C+Tariff+St%2C+Manchester">Map</a></li><li>☕ The Koffee Pot, Oldham St (only swaps for This &amp; That) <a class="mp" href="https://www.google.com/maps/search/?api=1&amp;query=Koffee+Pot%2C+84+Oldham+St%2C+Manchester">Map</a></li></ul></div>
+
+<h2>Key</h2>
+<div class="legend"><span>🍻 pub</span><span>🍴 eatery</span><span>☕ cafe</span><span>👾 Invader</span><span>⚽ football museum</span><span>📸 sight</span><span>🚶 walk</span><span>🚕 taxi</span><span>🚋 tram</span><span>🎤 gig</span></div>
+<footer>Fixed points: BOX table 20:00 Sun · museum slot 12:30 Mon (Jason books) · Butter Bird 17:15 Mon · Co-op Live doors 18:30, show 19:00 · train 14:25 Tue.</footer>
+</div>
+<script>
+const DAYS={"sun": {"name": "Sunday 25 Oct", "routes": ["https://www.google.com/maps/dir/?api=1&origin=Manchester+Piccadilly+Station&destination=Junkyard+Golf%2C+Albion+St%2C+Manchester&waypoints=Lass+O%27Gowrie%2C+36+Charles+St%2C+Manchester|Palace+Theatre%2C+Oxford+St%2C+Manchester|O%27Connell%27s%2C+Oxford+Rd%2C+Manchester|Great+Marlborough+St%2C+Manchester|Tony+Wilson+Place%2C+Manchester|House+of+Social%2C+10+Sir+Howard+Bernstein+Approach%2C+Manchester|The+Hacienda+site%2C+Whitworth+St+West%2C+Manchester&travelmode=walking", "https://www.google.com/maps/dir/?api=1&origin=Junkyard+Golf%2C+Albion+St%2C+Manchester&destination=Mulligans%2C+12+Southgate%2C+Manchester&waypoints=Dom%27s+Italia%2C+Castle+St%2C+Manchester|Lock+91%2C+Castlefield%2C+Manchester|Deansgate+at+Hewitt+St%2C+Manchester|Britons+Protection%2C+Great+Bridgewater+St%2C+Manchester|The+Temple+of+Convenience%2C+100+Great+Bridgewater+St%2C+Manchester|Peveril+of+the+Peak%2C+Great+Bridgewater+St%2C+Manchester|YOTEL+Manchester+Deansgate%2C+2+John+Dalton+St%2C+M3+2NW&travelmode=walking", "https://www.google.com/maps/dir/?api=1&origin=Mulligans%2C+12+Southgate%2C+Manchester&destination=Schofield%27s+Bar%2C+Sunlight+House%2C+Quay+St%2C+Manchester&waypoints=BOX%2C+125+Deansgate%2C+Manchester|King+St+at+Police+St%2C+Manchester|Be+At+One%2C+Deansgate%2C+Manchester|Parsonage+Gardens%2C+Manchester|Blackfriars+St+at+the+River+Irwell%2C+Manchester&travelmode=walking"], "stops": [{"t": "12:30", "s": 750, "e": 755, "em": "🚆", "n": "Arrive Manchester Piccadilly", "stay": "", "x": "CrossCountry from Birmingham lands; Jason arrives at Oxford Road at 13:20.", "w": "🚶 15 min to Lass O'Gowrie · leave 12:35", "map": "https://www.google.com/maps/search/?api=1&query=Manchester+Piccadilly+Station", "pins": []}, {"t": "12:50–13:55", "s": 770, "e": 835, "em": "🍻", "n": "Lass O'Gowrie", "stay": "65 min", "x": "Cosy, characterful Victorian ale pub with brewery heritage and a loyal student following. Jason joins around 13:30 (arrives Oxford Road 13:20, about 10 min walk).", "w": "🚶 5 min · leave by 13:55", "map": "https://www.google.com/maps/search/?api=1&query=Lass+O%27Gowrie%2C+36+Charles+St%2C+Manchester", "pins": []}, {"t": "14:00–14:15", "s": 840, "e": 855, "em": "👾", "n": "Oxford Rd Invaders (3)", "stay": "", "x": "Three pins in the Oxford St / Whitworth St W area, a few streets from Lass O'Gowrie.", "w": "🚶 10 min to Tony Wilson Place · leave by 14:15", "map": "", "pins": [["Whitworth St W by the Palace Theatre", "https://www.google.com/maps/search/?api=1&query=Palace+Theatre%2C+Oxford+St%2C+Manchester"], ["Oxford Rd railway bridge by O'Connell's", "https://www.google.com/maps/search/?api=1&query=O%27Connell%27s%2C+Oxford+Rd%2C+Manchester"], ["Great Marlborough St at Oxford Rd station", "https://www.google.com/maps/search/?api=1&query=Great+Marlborough+St%2C+Manchester"]]}, {"t": "14:25–14:30", "s": 865, "e": 870, "em": "📸", "n": "Tony Wilson Place", "stay": "", "x": "Named for the Factory Records and Haçienda founder, beside HOME (exact spot unverified).", "w": "🚶 5 min to House of Social · leave by 14:30", "map": "https://www.google.com/maps/search/?api=1&query=Tony+Wilson+Place%2C+Manchester", "pins": []}, {"t": "14:35–15:35", "s": 875, "e": 935, "em": "🍴", "n": "House of Social / Mughli Canteen", "stay": "60 min", "x": "Lively, buzzy food hall; Mughli is the hearty, spicy Indian kitchen. A proper lunch after the first pub (food hall open to 21:00, kitchens close 20:00).", "w": "🚶 10 min to the Haçienda · leave by 15:35", "map": "https://www.google.com/maps/search/?api=1&query=House+of+Social%2C+10+Sir+Howard+Bernstein+Approach%2C+Manchester", "pins": []}, {"t": "15:45–15:55", "s": 945, "e": 955, "em": "📸", "n": "Former Haçienda site, plus 👾 Albion St Invader", "stay": "", "x": "The legendary Factory nightclub (demolished 2002), now flats with a plaque; birthplace of Madchester. The Albion St by Medlock St pin is beside it.", "w": "🚶 5 min to Castlefield · leave by 15:55", "map": "https://www.google.com/maps/search/?api=1&query=The+Hacienda+site%2C+Whitworth+St+West%2C+Manchester", "pins": [["Albion St, south of Britons, by Escape Spa and Junkyard Golf", "https://www.google.com/maps/search/?api=1&query=Junkyard+Golf%2C+Albion+St%2C+Manchester"]]}, {"t": "16:00–16:25", "s": 960, "e": 985, "em": "👾", "n": "Castlefield Invaders (3)", "stay": "", "x": "The three western-most pins by the canal basin and Deansgate. Follow the app's order on the day; my order is a guess.", "w": "🚶 10 min to Britons · leave by 16:25", "map": "", "pins": [["Castle St by Dom's Italia", "https://www.google.com/maps/search/?api=1&query=Dom%27s+Italia%2C+Castle+St%2C+Manchester"], ["Lock 91, canal", "https://www.google.com/maps/search/?api=1&query=Lock+91%2C+Castlefield%2C+Manchester"], ["Deansgate at Hewitt St", "https://www.google.com/maps/search/?api=1&query=Deansgate+at+Hewitt+St%2C+Manchester"]]}, {"t": "16:35–17:05", "s": 995, "e": 1025, "em": "🍻", "n": "Britons Protection", "stay": "30 min", "x": "Warm, wood-panelled, whisky-heavy old pub with a beautiful tiled lobby; #4 on the Mancunion student list.", "w": "🚶 5 min · leave by 17:05", "map": "https://www.google.com/maps/search/?api=1&query=Britons+Protection%2C+Great+Bridgewater+St%2C+Manchester", "pins": []}, {"t": "17:10–17:40", "s": 1030, "e": 1060, "em": "🍻", "n": "The Temple", "stay": "30 min", "x": "Quirky, atmospheric, candle-lit pub in a converted Victorian underground toilet.", "w": "🚶 5 min · leave by 17:40", "map": "https://www.google.com/maps/search/?api=1&query=The+Temple+of+Convenience%2C+100+Great+Bridgewater+St%2C+Manchester", "pins": []}, {"t": "17:45–18:15", "s": 1065, "e": 1095, "em": "🍻", "n": "Peveril of the Peak", "stay": "30 min", "x": "Tiny, tiled, gloriously quirky corner pub; Time Out UK 2026 #1 in Britain, #3 on the Mancunion list.", "w": "🚶 15 min to YOTEL (estimate) · leave by 18:15", "map": "https://www.google.com/maps/search/?api=1&query=Peveril+of+the+Peak%2C+Great+Bridgewater+St%2C+Manchester", "pins": []}, {"t": "18:30–19:00", "s": 1110, "e": 1140, "em": "🏨", "n": "YOTEL check-in and rest", "stay": "", "x": "2 John Dalton St, M3 2NW. Drop the backpacks and freshen up.", "w": "🚶 10 min to Mulligans · leave by 19:00", "map": "https://www.google.com/maps/search/?api=1&query=YOTEL+Manchester+Deansgate%2C+2+John+Dalton+St%2C+M3+2NW", "pins": []}, {"t": "19:10–19:40", "s": 1150, "e": 1180, "em": "🍻", "n": "Mulligans", "stay": "30 min", "x": "Classic, polished Irish pub known for its Guinness; live-music times unpublished.", "w": "🚶 5 min · leave by 19:40", "map": "https://www.google.com/maps/search/?api=1&query=Mulligans%2C+12+Southgate%2C+Manchester", "pins": []}, {"t": "19:45–22:00", "s": 1185, "e": 1320, "em": "🍻", "n": "BOX (table booked 20:00)", "stay": "2 h 15 min", "x": "Lively big-screen bar on Deansgate, booked for El Clásico.", "w": "🚶 5 min · leave at the final whistle, about 22:00", "map": "https://www.google.com/maps/search/?api=1&query=BOX%2C+125+Deansgate%2C+Manchester", "pins": []}, {"t": "22:05–22:30", "s": 1325, "e": 1350, "em": "👾", "n": "Deansgate Invaders (4)", "stay": "", "x": "Four pins working north from BOX: King St, Be At One, Parsonage Gardens, then the Irwell.", "w": "🚶 5 min · leave by 22:30", "map": "", "pins": [["King St at Police St", "https://www.google.com/maps/search/?api=1&query=King+St+at+Police+St%2C+Manchester"], ["Deansgate by Be At One", "https://www.google.com/maps/search/?api=1&query=Be+At+One%2C+Deansgate%2C+Manchester"], ["Parsonage Gardens at College Land", "https://www.google.com/maps/search/?api=1&query=Parsonage+Gardens%2C+Manchester"], ["The Irwell at Blackfriars St", "https://www.google.com/maps/search/?api=1&query=Blackfriars+St+at+the+River+Irwell%2C+Manchester"]]}, {"t": "22:35–late", "s": 1355, "e": 1515, "em": "🍻", "n": "Schofield's Bar (optional drink)", "stay": "open-ended", "x": "Slick, stylish cocktail bar atop Sunlight House; last call 00:30, open to 01:30.", "w": "🚶 About 10 min back to YOTEL (estimate) · leave by 01:15 at the latest", "map": "https://www.google.com/maps/search/?api=1&query=Schofield%27s+Bar%2C+Sunlight+House%2C+Quay+St%2C+Manchester", "pins": []}]}, "mon": {"name": "Monday 26 Oct", "routes": ["https://www.google.com/maps/dir/?api=1&origin=YOTEL+Manchester+Deansgate%2C+2+John+Dalton+St%2C+M3+2NW&destination=Wheatsheaf%2C+Oak+St%2C+Manchester&waypoints=Fort+Coffee%2C+The+Great+Northern%2C+Deansgate%2C+Manchester|Salford+Lads+Club%2C+St+Ignatius+Walk%2C+Manchester|Lulu%27s%2C+Bridgewater+Place%2C+Manchester|Catlow+Lane%2C+Red+Lion+St%2C+Manchester|NQ64%2C+Tib+St%2C+Manchester|Tib+St+at+Dorsey+St%2C+Manchester|Craft+and+Design+Centre%2C+Oak+St%2C+Manchester&travelmode=walking", "https://www.google.com/maps/dir/?api=1&origin=Wheatsheaf%2C+Oak+St%2C+Manchester&destination=Piccadilly+Tavern%2C+Newton+St%2C+Manchester&waypoints=Back+Thomas+St%2C+Manchester|Shudehill+at+Withy+Grove%2C+Manchester|Dantzic+St%2C+Manchester|This+%26+That%2C+3+Soap+St%2C+Manchester|National+Football+Museum%2C+Manchester|Hunts+Bank+Approach%2C+Manchester|Cathedral+Gardens%2C+Manchester&travelmode=walking", "https://www.google.com/maps/dir/?api=1&origin=Piccadilly+Tavern%2C+Newton+St%2C+Manchester&destination=Castle+Hotel%2C+66+Oldham+St%2C+Manchester&waypoints=Premier+Inn%2C+Dale+St%2C+Manchester|Rat+and+Pigeon%2C+Back+Piccadilly%2C+Manchester|Bearded+Feeder%2C+Oldham+St%2C+Manchester|China+Lane+at+Back+Piccadilly%2C+Manchester|Holiday+Inn%2C+Auburn+St%2C+Manchester|Star+and+Garter%2C+18+Fairfield+St%2C+Manchester|Marble+Arch+Inn%2C+73+Rochdale+Rd%2C+Manchester&travelmode=walking", "https://www.google.com/maps/dir/?api=1&origin=Castle+Hotel%2C+66+Oldham+St%2C+Manchester&destination=Co-op+Live+Arena%2C+Manchester&waypoints=Butter+Bird%2C+Ancoats%2C+Manchester&travelmode=walking"], "stops": [{"t": "09:00", "s": 540, "e": 540, "em": "🏨", "n": "Leave YOTEL", "stay": "", "x": "Backpacks stay in the room; no bags to the gig.", "w": "🚶 10 min to Fort Coffee · leave 09:00", "map": "https://www.google.com/maps/search/?api=1&query=YOTEL+Manchester+Deansgate%2C+2+John+Dalton+St%2C+M3+2NW", "pins": []}, {"t": "09:10–09:25", "s": 550, "e": 565, "em": "☕", "n": "Fort Coffee, The Great Northern, Deansgate", "stay": "15 min", "x": "Quick, strong, no-fuss flat white to start the day (Mon opens 07:30).", "w": "🚶 30 min · leave by 09:25", "map": "https://www.google.com/maps/search/?api=1&query=Fort+Coffee%2C+The+Great+Northern%2C+Deansgate%2C+Manchester", "pins": []}, {"t": "09:55–10:05", "s": 595, "e": 605, "em": "📸", "n": "Salford Lads Club", "stay": "", "x": "The Smiths' Queen Is Dead sleeve location, St Ignatius Walk, M5 3RX. Essential pilgrimage.", "w": "🚕 Taxi 15 min to NQ · leave by 10:05", "map": "https://www.google.com/maps/search/?api=1&query=Salford+Lads+Club%2C+St+Ignatius+Walk%2C+Manchester", "pins": []}, {"t": "10:20–11:20", "s": 620, "e": 680, "em": "👾", "n": "Northern Quarter sweep (8 Invaders)", "stay": "", "x": "Eight pins swept south to north, plus the Andy Rourke mural. About 10 min of spare time now that Afflecks is on the subs bench.", "w": "🚶 10 min · leave by 11:20", "map": "", "pins": [["Joiner St at Bridgewater Pl, by Lulu's", "https://www.google.com/maps/search/?api=1&query=Lulu%27s%2C+Bridgewater+Place%2C+Manchester"], ["Catlow Lane, by Tattitude and Hangover", "https://www.google.com/maps/search/?api=1&query=Catlow+Lane%2C+Red+Lion+St%2C+Manchester"], ["Tib St at Short St, by NQ64", "https://www.google.com/maps/search/?api=1&query=NQ64%2C+Tib+St%2C+Manchester"], ["Tib St at Dorsey St, by Bags of Flavour", "https://www.google.com/maps/search/?api=1&query=Tib+St+at+Dorsey+St%2C+Manchester"], ["Copperas St at Oak St, by the Craft & Design Centre", "https://www.google.com/maps/search/?api=1&query=Craft+and+Design+Centre%2C+Oak+St%2C+Manchester"], ["📸 Andy Rourke mural, Wheatsheaf, Oak St", "https://www.google.com/maps/search/?api=1&query=Wheatsheaf%2C+Oak+St%2C+Manchester"], ["Back Thomas St, by Hunters BBQ", "https://www.google.com/maps/search/?api=1&query=Back+Thomas+St%2C+Manchester"], ["Shudehill at Withy Grove", "https://www.google.com/maps/search/?api=1&query=Shudehill+at+Withy+Grove%2C+Manchester"], ["Dantzic St", "https://www.google.com/maps/search/?api=1&query=Dantzic+St%2C+Manchester"]]}, {"t": "11:30–12:10", "s": 690, "e": 730, "em": "🍴", "n": "This & That, 3 Soap St", "stay": "40 min", "x": "Cult, cheap, gloriously messy curry canteen. Opens 11:30, so you queue from 11:30. Hearty and fiery.", "w": "🚶 10 min · leave by 12:10 (arrive 12:20)", "map": "https://www.google.com/maps/search/?api=1&query=This+%26+That%2C+3+Soap+St%2C+Manchester", "pins": []}, {"t": "12:30–14:00", "s": 750, "e": 840, "em": "⚽", "n": "National Football Museum", "stay": "90 min", "x": "Huge football history collection; Jason is booking the 12:30 slot on Friday.", "w": "🚶 Short hop to the Victoria pins · leave by 14:00", "map": "https://www.google.com/maps/search/?api=1&query=National+Football+Museum%2C+Manchester", "pins": []}, {"t": "14:00–14:10", "s": 840, "e": 850, "em": "👾", "n": "Victoria Invaders (2)", "stay": "", "x": "Two pins right by the museum and cathedral.", "w": "🚶 15 min to Newton St (estimate) · leave by 14:10", "map": "", "pins": [["Hunts Bank Approach by Chetham's", "https://www.google.com/maps/search/?api=1&query=Hunts+Bank+Approach%2C+Manchester"], ["Cathedral Gardens", "https://www.google.com/maps/search/?api=1&query=Cathedral+Gardens%2C+Manchester"]]}, {"t": "14:25–15:00", "s": 865, "e": 900, "em": "👾", "n": "Piccadilly Invaders (6)", "stay": "", "x": "Six pins around Back Piccadilly, ending at Auburn St by the canal. Order within this block is my best guess; follow the app if it looks quicker.", "w": "🚶 10 min to the mural (estimate) · leave by 15:00", "map": "", "pins": [["Newton St at Back Piccadilly, by Piccadilly Tavern", "https://www.google.com/maps/search/?api=1&query=Piccadilly+Tavern%2C+Newton+St%2C+Manchester"], ["Dale St, by Premier Inn and The Social", "https://www.google.com/maps/search/?api=1&query=Premier+Inn%2C+Dale+St%2C+Manchester"], ["Back Piccadilly by the Rat & Pigeon and Wetherspoons", "https://www.google.com/maps/search/?api=1&query=Rat+and+Pigeon%2C+Back+Piccadilly%2C+Manchester"], ["Back Piccadilly at Oldham St end, by Bearded Feeder", "https://www.google.com/maps/search/?api=1&query=Bearded+Feeder%2C+Oldham+St%2C+Manchester"], ["Back Piccadilly at China Lane, by KFC", "https://www.google.com/maps/search/?api=1&query=China+Lane+at+Back+Piccadilly%2C+Manchester"], ["Auburn St at the canal, by Holiday Inn", "https://www.google.com/maps/search/?api=1&query=Holiday+Inn%2C+Auburn+St%2C+Manchester"]]}, {"t": "15:10–15:15", "s": 910, "e": 915, "em": "📸", "n": "Ian Curtis mural, Star & Garter", "stay": "", "x": "Akse's tribute to Joy Division's singer, 18 Fairfield St; it replaced the Port St original, painted over in 2022. A quick photo stop.", "w": "🚶 20 min to Marble Arch · leave by 15:15", "map": "https://www.google.com/maps/search/?api=1&query=Star+and+Garter%2C+18+Fairfield+St%2C+Manchester", "pins": []}, {"t": "15:35–16:05", "s": 935, "e": 965, "em": "🍻", "n": "Marble Arch Inn", "stay": "30 min", "x": "Characterful, cosy Victorian ale pub with a sloping floor and its own brewery; #15 in Time Out UK 2026. Open from 12:00 Monday.", "w": "🚶 15 min to Castle Hotel · leave by 16:05", "map": "https://www.google.com/maps/search/?api=1&query=Marble+Arch+Inn%2C+73+Rochdale+Rd%2C+Manchester", "pins": []}, {"t": "16:20–16:55", "s": 980, "e": 1015, "em": "🍻", "n": "Castle Hotel", "stay": "35 min", "x": "Snug, historic, craft-beer-loving pub with a tiled facade; #2 on the Mancunion student list. Open 12:00 to 01:00 Monday.", "w": "🚶 20 min to Butter Bird (Ancoats) · leave by 16:55", "map": "https://www.google.com/maps/search/?api=1&query=Castle+Hotel%2C+66+Oldham+St%2C+Manchester", "pins": []}, {"t": "17:15–18:05", "s": 1035, "e": 1085, "em": "🍴", "n": "Butter Bird (booked)", "stay": "50 min", "x": "Ancoats. Mon 26 Oct, 17:15, Oz Powles, party of 2. Crispy, juicy rotisserie chicken.", "w": "🚋 Tram or 🚕 taxi to Co-op Live · leave by 18:05", "map": "https://www.google.com/maps/search/?api=1&query=Butter+Bird%2C+Ancoats%2C+Manchester", "pins": []}, {"t": "18:40", "s": 1120, "e": 1410, "em": "🎤", "n": "Co-op Live (doors 18:30, show 19:00)", "stay": "", "x": "The Strokes, with Fat White Family and Alex Cameron. No bags. Drop-off Edwin Road M11 3ER; if trams are down, taxi.", "w": "", "map": "https://www.google.com/maps/search/?api=1&query=Co-op+Live+Arena%2C+Manchester", "pins": []}]}, "tue": {"name": "Tuesday 27 Oct", "routes": ["https://www.google.com/maps/dir/?api=1&origin=YOTEL+Manchester+Deansgate%2C+2+John+Dalton+St%2C+M3+2NW&destination=Hart+St%2C+Manchester+College&waypoints=Federal+Cafe+Bar%2C+Circle+Square%2C+Oxford+Rd%2C+Manchester|Oxford+Rd+at+Grosvenor+St%2C+Manchester|118+Princess+St%2C+Manchester|Granby+Row%2C+Manchester|Canal+St+at+Sackville+St%2C+Manchester|Sackville+Gardens%2C+Manchester|Princess+St+at+Richmond+St%2C+Manchester&travelmode=walking", "https://www.google.com/maps/dir/?api=1&origin=Hart+St%2C+Manchester+College&destination=Manchester+Piccadilly+Station&waypoints=A%26O+Manchester%2C+Princess+St|Pho+Cue%2C+Chinatown%2C+Manchester|Metro+Convenience%2C+Mosley+St%2C+Manchester|Bundobust%2C+Oxford+St%2C+Manchester&travelmode=walking"], "stops": [{"t": "09:00", "s": 540, "e": 540, "em": "🏨", "n": "Leave YOTEL and check out", "stay": "", "x": "Take the backpacks; you are not coming back.", "w": "🚶 20 min to Federal · leave 09:00", "map": "https://www.google.com/maps/search/?api=1&query=YOTEL+Manchester+Deansgate%2C+2+John+Dalton+St%2C+M3+2NW", "pins": []}, {"t": "09:20–10:00", "s": 560, "e": 600, "em": "☕", "n": "Federal Oxford Rd", "stay": "40 min", "x": "Bright, bustling Australian-style cafe; great flat whites and brunch.", "w": "🚶 15 min (estimate) · leave by 10:00", "map": "https://www.google.com/maps/search/?api=1&query=Federal+Cafe+Bar%2C+Circle+Square%2C+Oxford+Rd%2C+Manchester", "pins": []}, {"t": "10:15–10:20", "s": 615, "e": 620, "em": "👾", "n": "Grosvenor Square Invader", "stay": "", "x": "Oxford Rd at Grosvenor St.", "w": "🚶 15 min (estimate) · leave by 10:20", "map": "", "pins": [["Oxford Rd at Grosvenor St", "https://www.google.com/maps/search/?api=1&query=Oxford+Rd+at+Grosvenor+St%2C+Manchester"]]}, {"t": "10:35–10:40", "s": 635, "e": 640, "em": "📸", "n": "FAC 251, 118 Princess St", "stay": "", "x": "Former Factory Records HQ, now a nightclub; no street marker.", "w": "🚶 5 min · leave by 10:40", "map": "https://www.google.com/maps/search/?api=1&query=118+Princess+St%2C+Manchester", "pins": []}, {"t": "10:45–12:15", "s": 645, "e": 735, "em": "👾", "n": "South-central Invaders (8)", "stay": "", "x": "Eight pins around Chinatown, the canal and Princess St.", "w": "🚶 15 min · leave by 12:15", "map": "", "pins": [["Granby Row", "https://www.google.com/maps/search/?api=1&query=Granby+Row%2C+Manchester"], ["Canal St at Sackville St", "https://www.google.com/maps/search/?api=1&query=Canal+St+at+Sackville+St%2C+Manchester"], ["Sackville Gardens", "https://www.google.com/maps/search/?api=1&query=Sackville+Gardens%2C+Manchester"], ["Princess St at Richmond St", "https://www.google.com/maps/search/?api=1&query=Princess+St+at+Richmond+St%2C+Manchester"], ["Hart St by Manchester College", "https://www.google.com/maps/search/?api=1&query=Hart+St%2C+Manchester+College"], ["Princess St by the A&O hotel", "https://www.google.com/maps/search/?api=1&query=A%26O+Manchester%2C+Princess+St"], ["Chinatown by Pho Cue", "https://www.google.com/maps/search/?api=1&query=Pho+Cue%2C+Chinatown%2C+Manchester"], ["Mosley St end by Metro Convenience", "https://www.google.com/maps/search/?api=1&query=Metro+Convenience%2C+Mosley+St%2C+Manchester"]]}, {"t": "12:30–13:40", "s": 750, "e": 820, "em": "🍴", "n": "Bundobust Brewery, Oxford St", "stay": "70 min", "x": "Vibrant, casual Gujarati street-food and craft-beer spot; vegetarian, flavourful and fast.", "w": "Leave by 13:40 · Jason at Oxford Road 13:45 (5 min walk) · you at Piccadilly 14:00 (20 min walk)", "map": "https://www.google.com/maps/search/?api=1&query=Bundobust%2C+Oxford+St%2C+Manchester", "pins": []}, {"t": "14:25", "s": 865, "e": 995, "em": "🚆", "n": "Train home", "stay": "", "x": "Piccadilly 14:25, Birmingham New St 15:57, change 16:16, Wylde Green 16:34. Jason also 14:25 from Oxford Road.", "w": "", "map": "https://www.google.com/maps/search/?api=1&query=Manchester+Piccadilly+Station", "pins": []}]}};
+const TRIP={sun:"2026-10-25",mon:"2026-10-26",tue:"2026-10-27"};
+const TODO=["Jason books the National Football Museum 12:30 slot (90 min) with the discount code","Backpacks only, nothing bigger","Open each day-map link and compare walking times (this afternoon)","Mon around 17:45: check tram status for Co-op Live, or order a taxi","Bee Network app (done)"];
+const $=id=>document.getElementById(id);
+let sel="sun",override=null,tick;
+const hm=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")};
+function londonNow(){const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date()).reduce((a,x)=>(a[x.type]=x.value,a),{});return{date:p.year+"-"+p.month+"-"+p.day,min:+p.hour*60+ +p.minute}}
+function cur(){ // returns {day,min,live}
+ if(override)return{day:override.day,min:override.min,live:false};
+ const n=londonNow();let day=null;
+ for(const k in TRIP)if(TRIP[k]===n.date)day=k;
+ if(!day){ // after midnight carry-over from Sunday late night
+  if(n.date==="2026-10-26"&&n.min<120)return{day:"sun",min:n.min+1440,live:true};
+  return{day:null,min:n.min,live:true}}
+ return{day,min:n.min,live:true}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function state(stops,min){ // index of current stop, gap info
+ let ci=-1,ni=-1,gap=false;
+ for(let i=0;i<stops.length;i++){const s=stops[i];if(min>=s.s&&min<s.e){ci=i;break}}
+ if(ci<0){for(let i=0;i<stops.length;i++)if(stops[i].s>min){ni=i;gap=true;break}}
+ return{ci,ni,gap}}
+function render(){
+ const c=cur(),stops=DAYS[sel].stops;
+ const live=c.day===sel?c.min:null;
+ const st=live==null?{ci:-1,ni:-1,gap:false}:state(stops,live);
+ const before=live!=null&&c.day===sel&&live<stops[0].s;
+ let h="",gapDone=false;
+ stops.forEach((s,i)=>{
+  let cls="st",badge="";
+  if(live!=null){
+   if(st.ci===i){cls+=" now";badge="NOW"}
+   else if(st.gap&&st.ni===i){cls+=" next";badge="NEXT"}
+   else if(s.e<=live){cls+=" past";badge="DONE"}
+   else if(st.ci<0&&!st.gap&&s.e<=live){cls+=" past"}
+  }
+  if(st.gap&&st.ni===i&&i>0){h+=`<li class="gap" aria-hidden="true"><span>${hm(live)} now</span></li>`}
+  if(st.gap&&st.ni===i&&i===0){h+=`<li class="gap" aria-hidden="true"><span>${hm(live)} now</span></li>`}
+  const pins=s.pins.length?`<ul class="pins">${s.pins.map(p=>`<li><span>👾 ${esc(p[0])}</span> <a href="${p[1]}">Map</a></li>`).join("")}</ul>`:"";
+  h+=`<li class="${cls}"><div class="top"><span class="tm">${esc(s.t)}</span><span class="nm">${s.em} ${esc(s.n)}</span>${s.stay?`<span class="stay">${esc(s.stay)}</span>`:""}<span class="badge">${badge}</span></div><p class="x">${esc(s.x)}</p>${pins}${s.w?`<p class="w">${esc(s.w)}</p>`:""}${s.map?`<a class="mp" href="${s.map}">Map</a>`:""}</li>`;
+ });
+ if(live!=null&&st.ci<0&&!st.gap&&live>=stops[stops.length-1].e)h+=`<li class="gap" aria-hidden="true"><span>${hm(live)} now</span></li>`;
+ $("tl").innerHTML=h;
+ // bar
+ $("clock").textContent=hm(c.min);
+ const bar=$("bar");let l1="",l2="",pr=0;
+ const ds=c.day?DAYS[c.day]:null;
+ if(!c.day){
+  const first=new Date("2026-10-25T00:00:00Z"),now=new Date();
+  const d=Math.ceil((first-now)/86400000);
+  l1=d>0?`Trip starts Sunday 25 Oct (${d} day${d>1?"s":""} to go)`:"Trip is over. Welcome home.";l2="Use Test a time to preview any moment."}
+ else{
+  const S=ds.stops,r=state(S,c.min);
+  if(r.ci>=0){const s=S[r.ci];l1=`${s.em} Now: ${s.n}`;pr=(c.min-s.s)/Math.max(1,s.e-s.s);
+   const nx=S[r.ci+1];l2=(s.w?s.w.replace(/^🚶 |^🚕 |^🚋 /,"")+" · ":"")+(nx?`Next: ${nx.n} ${nx.t.split("–")[0]}`:"Last stop of the day")}
+  else if(r.gap){const n=S[r.ni],p=S[r.ni-1];l1=r.ni===0?`Next: ${n.em} ${n.n} at ${n.t.split("–")[0]}`:`🚶 Between stops, heading to ${n.n}`;
+   if(p){pr=(c.min-p.e)/Math.max(1,n.s-p.e)}
+   l2=`Arrive ${n.t.split("–")[0]} · ${n.s-c.min} min to go`}
+  else{l1="Day finished";l2="Nothing left today";pr=1}
+ }
+ $("now1").textContent=l1;$("now2").textContent=l2;$("prog").firstElementChild.style.width=Math.max(0,Math.min(1,pr))*100+"%";
+ $("mode").textContent=override?"Test time":(c.day?"Live":"Not trip time yet");
+}
+function setDay(k){sel=k;[...document.querySelectorAll(".tab")].forEach(t=>t.setAttribute("aria-selected",t.dataset.k===k));
+ const d=DAYS[k];$("maps").innerHTML=`<b>Whole-day walking route</b>`+d.routes.map((u,i)=>`<a href="${u}">Part ${i+1}</a>`).join("");render()}
+(function init(){
+ $("tabs").innerHTML=Object.keys(DAYS).map(k=>`<button class="tab" role="tab" data-k="${k}" aria-selected="false">${DAYS[k].name.split(" ")[0]}<small>${DAYS[k].name.split(" ").slice(1).join(" ")}</small></button>`).join("");
+ $("tabs").onclick=e=>{const b=e.target.closest(".tab");if(b)setDay(b.dataset.k)};
+ let saved={};try{saved=JSON.parse(localStorage.getItem("mcr-todo")||"{}")}catch(e){}
+ $("todo").innerHTML=TODO.map((t,i)=>`<label><input type="checkbox" id="td${i}" ${(saved[i]||i===4)?"checked":""}><span>${esc(t)}</span></label>`).join("");
+ $("todo").onchange=()=>{const o={};TODO.forEach((_,i)=>o[i]=$("td"+i).checked);try{localStorage.setItem("mcr-todo",JSON.stringify(o))}catch(e){}};
+ $("tgo").onclick=()=>{const v=$("ttime").value||"12:00";const[h,m]=v.split(":").map(Number);let min=h*60+m;const d=$("tday").value;override={day:d,min};setDay(d)};
+ $("tlive").onclick=()=>{override=null;const c=cur();setDay(c.day||"sun")};
+ const c=cur();setDay(c.day||"sun");
+ setInterval(()=>{if(!override)render()},20000);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+})();
+</script>
